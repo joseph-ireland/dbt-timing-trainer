@@ -67,20 +67,24 @@
     input+label {
       background-color: var(--bg-color);
       color: var(--txt-color);
-      padding: 16px 32px;
+      padding: 16px 10px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
       font-size: 16px;
       margin: 4px 2px;
-      transition-duration: 0.4s;
+      transition-duration: 0.3s;
       cursor: pointer;
       border: 2px solid var(--bg-color);
       flex-grow: 1;
     }
 
-    button {
+    button:first-of-type {
       margin-top: 40px;
+    }
+
+    .flex-full-line {
+      flex-basis: 100%;
     }
 
     button,
@@ -115,6 +119,22 @@
       flex-wrap: wrap;
     }
 
+    #easy:checked~#difficulty_info::before {
+      content: "Only multiples of 5."
+    }
+
+    #medium:checked~#difficulty_info::before {
+      content: "All numbers. Answers snap to offset multiples of 5."
+    }
+
+    #hard:checked~#difficulty_info::before {
+      content: "All numbers. Answers snap to even/odd numbers."
+    }
+
+    #extra:checked~#difficulty_info::before {
+      content: "All numbers. Exact Answers."
+    }
+
     .hidden {
       display: none;
     }
@@ -125,6 +145,31 @@
 
     .mega {
       --txt-color: rgb(29, 167, 202);
+    }
+
+    li {
+      text-align: left;
+      padding: 10px;
+    }
+
+    .mega.text::before {
+      content: "Mega";
+      font-size: 20px;
+      display: block;
+    }
+
+    td.mega::before {
+      content: "Mega: "
+    }
+
+    .armour.text::before {
+      content: "Armour";
+      font-size: 20px;
+      display: block;
+    }
+
+    td.armour::before {
+      content: "Armour: "
     }
 
     div,
@@ -147,16 +192,37 @@
       <input type="checkbox" id="mega" name="item" value="mega" /> <label for="mega" class="mega">Mega</label>
     </div>
     <div id=difficulty class="menu">
-
       <input type="radio" id="easy" name="difficulty" value="easy" /> <label for="easy">Easy</label>
       <input type="radio" id="medium" name="difficulty" value="medium" /> <label for="medium">Medium</label>
       <input type="radio" id="hard" name="difficulty" value="hard" /> <label for="hard">Hard</label>
+      <input type="radio" id="extra" name="difficulty" value="extra" /> <label for="extra">Extra</label>
+
+      <p id="difficulty_info" class="menu flex-full-line"></p>
+
     </div>
     <div id=difficulty class="menu">
-      <button onclick="startGame()"> Start </button>
+      <button onclick="startGame()" class="flex-full-line"> Start </button>
+      <button onclick="setPage('how_to_play')" class="flex-full-line"> Tips </button>
     </div>
 
   </div>
+  <div id="how_to_play" class="main hidden">
+    <p class="title">Tips</p>
+
+    <div class="menu">
+      <div>
+        <li>Choose your items and difficulty and press start!</li>
+        <li>Click the clock face to select your answer. You can drag to adjust before you let go.</li>
+        <li>It's best to train with one item at a time to keep them separate in your head and avoid confusing them.</li>
+        <li>Mastering "Easy" or "Medium" difficulty is enough to reach a high level in duel.</li>
+        <li>Aim for a score of over 30 before choosing the next difficulty.</li>
+      </div>
+    </div>
+
+    <button class="menu" onclick="setPage('menu')">Back</button>
+
+  </div>
+
   <div id="game" class="main hidden">
     <div id="question" class="question text">
       0
@@ -164,7 +230,7 @@
 
     <div style="position: relative">
 
-      <canvas id="clock_canvas" width="300" height="300" style="position: absolute; top: 0px; left: 0px;">
+      <canvas id="clock_canvas" style="position: absolute; top: 0px; left: 0px; width: 300px; height: 300px;">
       </canvas>
 
       <div id="input_val" style="height: 300px" class="text input">
@@ -254,49 +320,53 @@
     function drawBg() {
       var bgCanvas = document.getElementById("clock_canvas");
       var bgCtx = bgCanvas.getContext("2d");
+      bgCanvas.width = 300 * window.devicePixelRatio;
+      bgCanvas.height = 300 * window.devicePixelRatio;
+      bgCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
       bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
       bgCtx.textAlign = 'center';
       bgCtx.textBaseline = 'middle';
-      bgCtx.font = 'normal bold 30px sans-serif';
-      bgCtx.strokeStyle = "rgb(200,200,200)"
-      bgCtx.fillStyle = bgCtx.strokeStyle
-      bgCtx.lineWidth = 2
+      bgCtx.font = `normal bold 30px sans-serif`;
+      bgCtx.strokeStyle = "rgb(200,200,200)";
+      bgCtx.fillStyle = bgCtx.strokeStyle;
+      bgCtx.lineWidth = 2;
 
       for (var seconds = 0; seconds < 60; seconds += 5) {
 
         var pos = secondsToPosition(seconds, radius);
-        pos[1] += 2
+        pos[1] += 2;
         bgCtx.fillText(seconds, pos[0], pos[1]);
 
-        var lineStartPos = secondsToPosition(seconds, radius + 25)
-        var lineEndPos = secondsToPosition(seconds, radius + 40)
+        var lineStartPos = secondsToPosition(seconds, radius + 25);
+        var lineEndPos = secondsToPosition(seconds, radius + 40);
         drawLine(bgCtx, lineStartPos, lineEndPos);
       }
-      bgCtx.lineWidth = 1
+      bgCtx.lineWidth = 1;
 
       for (var seconds = 0; seconds < 60; seconds += 1) {
-        var lineStartPos = secondsToPosition(seconds, radius + 35)
-        var lineEndPos = secondsToPosition(seconds, radius + 40)
+        var lineStartPos = secondsToPosition(seconds, radius + 35);
+        var lineEndPos = secondsToPosition(seconds, radius + 40);
         drawLine(bgCtx, lineStartPos, lineEndPos);
       }
     }
     drawBg();
 
-    function setPage(page) {
-      ["menu", "game", "postgame"].forEach(name => {
-        var element = document.getElementById(name);
-        if (page === name) {
-          element.classList.remove("hidden");
+    var pages = document.getElementsByClassName("main");
+    function setPage(id) {
+      for(var page of pages) {
+        if (page.id == id) {
+          page.classList.remove("hidden");
         }
         else {
-          element.classList.add("hidden");
+          page.classList.add("hidden");
         }
-      });
+      }
     }
     var itemTimes = {
       armour: 25,
       mega: 35,
-    }
+    };
     var gameState = {
       mousedown: false,
       question: 0,
@@ -312,7 +382,7 @@
       emd_time: 0,
       correct_list: [],
       incorrect_list: [],
-    }
+    };
     function startGame() {
       gameState.items.length = 0;
       if (document.getElementById("armour").checked) gameState.items.push("armour");
@@ -329,6 +399,10 @@
         gameState.answer_multiple = 5;
       }
       else if (document.getElementById("hard").checked) {
+        gameState.question_multiple = 1;
+        gameState.answer_multiple = 2;
+      }
+      else if (document.getElementById("extra").checked) {
         gameState.question_multiple = 1;
         gameState.answer_multiple = 1;
       }
@@ -418,7 +492,7 @@
     }
 
     function round(x, modulo, divisor) {
-      return (Math.round((x - modulo) / divisor) * divisor + modulo) % 60
+      return (Math.round((x - modulo) / divisor) * divisor + modulo + 60) % 60
     }
 
     function checkAnswer() {
