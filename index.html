@@ -439,23 +439,28 @@
       }
     }
 
+    var canvas = document.getElementById("clock_canvas");
+
     function setAnswer(x, y) {
+      var canvasPos = canvas.getBoundingClientRect()
+      x -= canvasPos.left;
+      y -= canvasPos.top;
+
       gameState.answer = round(positionToSeconds(x, y), gameState.answer_modulo, gameState.answer_multiple);
       displayInput();
     }
 
-    var canvas = document.getElementById("clock_canvas");
 
     canvas.addEventListener('mousedown', e => {
       gameState.mousedown = true;
       inputDiv.classList.remove("correct", "incorrect");
 
-      setAnswer(e.offsetX, e.offsetY);
+      setAnswer(e.clientX, e.clientY);
     });
 
     canvas.addEventListener('mousemove', e => {
       if (gameState.mousedown) {
-        setAnswer(e.offsetX, e.offsetY);
+        setAnswer(e.clientX, e.clientY);
       }
     });
 
@@ -464,28 +469,20 @@
       gameState.mousedown = false;
       checkAnswer();
     });
-    canvas.addEventListener("touchstart", function (e) {
+    canvas.addEventListener("touchstart", e => {
       var touch = e.touches[0];
-      var mouseEvent = new MouseEvent("mousedown", {
-        clientX: touch.clientX,
-        clientY: touch.clientY
-      });
-      canvas.dispatchEvent(mouseEvent);
-      e.preventDefault();
-    });
-    canvas.addEventListener("touchend", function (e) {
-      var mouseEvent = new MouseEvent("mouseup", {});
-      canvas.dispatchEvent(mouseEvent);
-      e.preventDefault();
+      inputDiv.classList.remove("correct", "incorrect");
 
+      setAnswer(touch.clientX, touch.clientY);
+      e.preventDefault();
     });
-    canvas.addEventListener("touchmove", function (e) {
+    canvas.addEventListener("touchend", e => {
+      checkAnswer();
+      e.preventDefault();
+    });
+    canvas.addEventListener("touchmove", e => {
       var touch = e.touches[0];
-      var mouseEvent = new MouseEvent("mousemove", {
-        clientX: touch.clientX,
-        clientY: touch.clientY
-      });
-      canvas.dispatchEvent(mouseEvent);
+      setAnswer(touch.clientX, touch.clientY);
       e.preventDefault();
     });
 
