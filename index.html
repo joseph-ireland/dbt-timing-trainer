@@ -101,6 +101,7 @@
       width: 0;
     }
 
+    button:active,
     button:hover,
     input:checked+label {
       background-color: var(--txt-color);
@@ -354,7 +355,7 @@
 
     var pages = document.getElementsByClassName("main");
     function setPage(id) {
-      for(var page of pages) {
+      for (var page of pages) {
         if (page.id == id) {
           page.classList.remove("hidden");
         }
